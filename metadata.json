@@ -1,0 +1,7 @@
+{
+  "name": "Angler's Pulse",
+  "description": "A solunar fishing forecast app that uses solar and lunar cycles to predict the best fishing times based on your location.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
