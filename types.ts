@@ -1,5 +1,6 @@
+
 export interface SolarLunarEvent {
-  type: 'sunrise' | 'sunset' | 'moonrise' | 'moonset' | 'major' | 'minor' | 'peak';
+  type: 'sunrise' | 'sunset' | 'moonrise' | 'moonset' | 'major' | 'minor';
   time: string;
   label: string;
 }
