@@ -19,6 +19,7 @@ export interface FishingDay {
   day: number;
   score: number;
   moonPhase: string;
+  moonPhaseValue: number; // 0 to 1 representing the lunar cycle position
   bestTimes: string[];
   hourlyActivity: number[];
   events: SolarLunarEvent[];

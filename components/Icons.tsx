@@ -3,7 +3,9 @@ import React from 'react';
 
 export const FishIcon = ({ className = "w-6 h-6" }) => (
   <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M22 12s-4-4-10-4S2 12 2 12s4 4 10 4 10-4 10-4zm-13 0a3 3 0 106 0 3 3 0 00-6 0z" />
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M22 12c-2.5 2.5-2.5-2.5-2.5-2.5M19.5 12h.5" />
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8c-1-2-3-3-5-3M12 16c-1 2-3 3-5 3" />
   </svg>
 );
 
