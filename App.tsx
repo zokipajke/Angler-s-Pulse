@@ -57,8 +57,6 @@ const App: React.FC = () => {
 
     try {
       setStatus(AppStatus.LOADING);
-      // Artificial delay for feel
-      await new Promise(r => setTimeout(r, 600));
       
       const data = await calculateFishingForecast(
         currentDate.getMonth() + 1,
@@ -77,7 +75,7 @@ const App: React.FC = () => {
       }
     } catch (err) {
       console.error(err);
-      setError("Failed to calculate forecast.");
+      setError("Failed to sync meteorological & solunar data.");
       setStatus(AppStatus.ERROR);
     }
   }, [currentDate, location]);
@@ -141,7 +139,6 @@ const App: React.FC = () => {
     );
   }, [selectedDay, currentDate]);
 
-  // Group peaks for the simplified display
   const majorPeaks = useMemo(() => 
     selectedDay?.events.filter(e => e.type === 'major').sort((a, b) => a.time.localeCompare(b.time)) || [], 
   [selectedDay]);
@@ -171,7 +168,7 @@ const App: React.FC = () => {
               ANGLER'S PULSE
             </h1>
             <p className="text-[10px] text-slate-500 uppercase tracking-[0.2em] font-black flex items-center gap-1.5">
-              <FishIcon className="w-3.5 h-3.5" /> Solunar Forecast
+              <FishIcon className="w-3.5 h-3.5" /> Solunar fishing calendar
             </p>
           </div>
           <button 
@@ -202,7 +199,8 @@ const App: React.FC = () => {
               <FishIcon className="w-8 h-8 text-violet-400 absolute inset-0 m-auto animate-pulse" />
             </div>
             <div className="text-center">
-              <p className="text-violet-400 font-black tracking-widest text-xs uppercase animate-pulse">Scanning Lunar Tides...</p>
+              <p className="text-violet-400 font-black tracking-widest text-xs uppercase animate-pulse">Syncing Forecasts...</p>
+              <p className="text-slate-500 text-[8px] font-bold uppercase mt-2">Connecting to Open-Meteo & Lunar APIs</p>
             </div>
           </div>
         )}
@@ -250,7 +248,7 @@ const App: React.FC = () => {
                   : 'bg-black/90 border-slate-800 shadow-black'}
               `}>
                 <div className="absolute top-6 left-8 pointer-events-none">
-                   <span className="text-[7px] font-black text-slate-400 uppercase tracking-[0.3em] bg-white/5 px-3 py-1 rounded-full border border-white/10">LOCAL CALCULATION</span>
+                   <span className="text-[7px] font-black text-slate-400 uppercase tracking-[0.3em] bg-white/5 px-3 py-1 rounded-full border border-white/10">REAL-TIME FORECAST</span>
                 </div>
 
                 <div className="flex justify-between items-start mb-10 mt-6 px-2">
@@ -359,9 +357,7 @@ const App: React.FC = () => {
 
                   <ActivityChart day={selectedDay} isToday={isSelectedDayToday} />
 
-                  {/* SOLUNAR PEAKS CONSOLIDATED DISPLAY */}
                   <div className="grid grid-cols-2 gap-4">
-                    {/* MAJOR PEAKS */}
                     <div className={`
                       rounded-[2.5rem] p-6 border text-center transition-all duration-700
                       ${selectedDay.score >= 85 
@@ -383,7 +379,6 @@ const App: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* MINOR PEAKS */}
                     <div className={`
                       rounded-[2.5rem] p-6 border text-center transition-all duration-700
                       ${selectedDay.score >= 85 
