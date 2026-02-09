@@ -194,7 +194,7 @@ export async function calculateFishingForecast(
 
     // Base: strong near New/Full, weaker near quarters
     const phaseImpact = (Math.cos(phaseVal * Math.PI * 4) + 1) / 2;
-    let baseScore = 50 + phaseImpact * 45;
+    let baseScore = 50 + phaseImpact * 40;
 
     // small bump right at New/Full
     if (phaseVal < 0.05 || phaseVal > 0.95 || (phaseVal > 0.45 && phaseVal < 0.55)) {
