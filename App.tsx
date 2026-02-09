@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Location, MonthlyForecast, AppStatus, FishingDay } from './types';
 import { calculateFishingForecast } from './services/solunarService';
@@ -57,7 +56,6 @@ const App: React.FC = () => {
 
     try {
       setStatus(AppStatus.LOADING);
-      // Artificial delay for feel
       await new Promise(r => setTimeout(r, 600));
       
       const data = await calculateFishingForecast(
@@ -141,6 +139,18 @@ const App: React.FC = () => {
     );
   }, [selectedDay, currentDate]);
 
+  const majorPeaks = useMemo(() => 
+    selectedDay?.events.filter(e => e.type === 'major').sort((a, b) => a.time.localeCompare(b.time)) || [], 
+  [selectedDay]);
+  
+  const minorPeaks = useMemo(() => 
+    selectedDay?.events.filter(e => e.type === 'minor').sort((a, b) => a.time.localeCompare(b.time)) || [], 
+  [selectedDay]);
+
+  const peakWindow = useMemo(() => 
+    selectedDay?.events.find(e => e.type === 'peak'), 
+  [selectedDay]);
+
   return (
     <div className={`
       min-h-screen transition-colors duration-1000 overflow-x-hidden relative pb-12
@@ -192,9 +202,7 @@ const App: React.FC = () => {
               <div className="w-20 h-20 border-4 border-violet-400/5 border-t-violet-400 rounded-full animate-spin"></div>
               <FishIcon className="w-8 h-8 text-violet-400 absolute inset-0 m-auto animate-pulse" />
             </div>
-            <div className="text-center">
-              <p className="text-violet-400 font-black tracking-widest text-xs uppercase animate-pulse">Scanning Lunar Tides...</p>
-            </div>
+            <p className="text-violet-400 font-black tracking-widest text-xs uppercase animate-pulse">Scanning Lunar Tides...</p>
           </div>
         )}
 
@@ -204,16 +212,11 @@ const App: React.FC = () => {
               <InfoIcon className="text-rose-400 w-8 h-8" />
             </div>
             <p className="text-rose-400 font-bold mb-6 text-sm uppercase tracking-tight">{error}</p>
-            <button 
-              onClick={loadForecast}
-              className="w-full py-4 bg-rose-600 text-white rounded-full font-black text-xs uppercase shadow-xl active:scale-95 transition-transform"
-            >
-              Retry
-            </button>
+            <button onClick={loadForecast} className="w-full py-4 bg-rose-600 text-white rounded-full font-black text-xs uppercase shadow-xl active:scale-95 transition-transform">Retry</button>
           </div>
         )}
 
-        {status === AppStatus.SUCCESS && (
+        {status === AppStatus.SUCCESS && selectedDay && (
           <>
             <div className="grid grid-cols-7 gap-1.5 mb-2 bg-slate-900/30 p-4 rounded-[2.5rem] border border-white/5 backdrop-blur-sm shadow-xl">
               {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(d => (
@@ -229,153 +232,139 @@ const App: React.FC = () => {
               <LegendItem color="bg-slate-700" label="Poor" />
             </div>
 
-            {selectedDay && (
-              <div className={`
-                rounded-[3.5rem] p-8 transition-all duration-700 border shadow-2xl overflow-hidden relative
-                ${selectedDay.score >= 85 
-                  ? 'bg-violet-900/40 border-violet-400/60 shadow-violet-900/50' 
-                  : selectedDay.score >= 70
-                  ? 'bg-emerald-900/30 border-emerald-500/40 shadow-emerald-900/30'
-                  : selectedDay.score >= 40
-                  ? 'bg-slate-900/80 border-slate-700 shadow-black/80'
-                  : 'bg-black/90 border-slate-800 shadow-black'}
-              `}>
-                <div className="absolute top-6 left-8 pointer-events-none">
-                   <span className="text-[7px] font-black text-slate-400 uppercase tracking-[0.3em] bg-white/5 px-3 py-1 rounded-full border border-white/10">LOCAL CALCULATION</span>
+            <div className={`
+              rounded-[3.5rem] p-8 transition-all duration-700 border shadow-2xl overflow-hidden relative
+              ${selectedDay.score >= 85 
+                ? 'bg-violet-900/40 border-violet-400/60 shadow-violet-900/50' 
+                : selectedDay.score >= 70
+                ? 'bg-emerald-900/30 border-emerald-500/40 shadow-emerald-900/30'
+                : selectedDay.score >= 40
+                ? 'bg-slate-900/80 border-slate-700 shadow-black/80'
+                : 'bg-black/90 border-slate-800 shadow-black'}
+            `}>
+              <div className="absolute top-6 left-8 pointer-events-none">
+                 <span className="text-[7px] font-black text-slate-400 uppercase tracking-[0.3em] bg-white/5 px-3 py-1 rounded-full border border-white/10">SOLAR-LUNAR SCAN</span>
+              </div>
+
+              <div className="flex justify-between items-start mb-10 mt-6 px-2">
+                <div className="w-1/4 flex flex-col items-center">
+                  <div className="h-24 flex items-center justify-center">
+                    <h3 className="text-6xl font-black leading-none tracking-tighter">{selectedDay.day}</h3>
+                  </div>
+                  <p className="text-lg text-slate-400 font-bold uppercase tracking-tight -mt-4">{monthName.slice(0, 3)}</p>
                 </div>
-
-                {/* THE REFINED HEADER LAYOUT ALIGNED BY CENTERLINE */}
-                <div className="flex justify-between items-start mb-10 mt-6 px-2">
-                  {/* DATE BLOCK - Day number is centered in its own 24-unit container to match moon icon's vertical center */}
-                  <div className="w-1/4 flex flex-col items-center">
-                    <div className="h-24 flex items-center justify-center">
-                      <h3 className="text-6xl font-black leading-none tracking-tighter">
-                        {selectedDay.day}
-                      </h3>
-                    </div>
-                    <p className="text-lg text-slate-400 font-bold uppercase tracking-tight -mt-4">
-                      {monthName.slice(0, 3)}
-                    </p>
+                <div className="flex-1 flex flex-col items-center">
+                  <div className="h-24 flex items-center justify-center">
+                    <MoonPhaseVisual phase={selectedDay.moonPhaseValue} className="w-24 h-24" />
                   </div>
-
-                  {/* VISUAL MOON BLOCK - Primary Center Reference */}
-                  <div className="flex-1 flex flex-col items-center">
-                    <div className="h-24 flex items-center justify-center">
-                      <MoonPhaseVisual phase={selectedDay.moonPhaseValue} className="w-24 h-24" />
-                    </div>
-                    <div className="bg-slate-100/10 border border-white/10 px-4 py-1.5 rounded-full backdrop-blur-sm mt-2">
-                      <span className="text-[10px] font-black uppercase tracking-widest text-slate-100 whitespace-nowrap">
-                        {selectedDay.moonPhase}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* SUCCESS RATE BLOCK - Aligned by circle center with Epic conditions badge directly above */}
-                  <div className="w-1/4 flex flex-col items-center relative">
-                    <div className="absolute -top-6 flex justify-center w-full">
-                      {selectedDay.score >= 85 && (
-                        <div className="bg-gradient-to-r from-violet-400 to-fuchsia-500 text-white text-[8px] font-black px-4 py-1.5 rounded-full animate-bounce shadow-lg shadow-violet-500/50 uppercase tracking-widest whitespace-nowrap">
-                          EPIC CONDITIONS
-                        </div>
-                      )}
-                    </div>
-                    <div className="h-24 flex items-center justify-center">
-                      <div className={`
-                        w-24 h-24 rounded-[2.5rem] flex items-center justify-center flex-col border-2 transition-all duration-700
-                        ${selectedDay.score >= 85 
-                          ? 'bg-violet-400/20 border-violet-400 text-violet-400 shadow-[0_0_40px_rgba(139,92,246,0.6)]' 
-                          : selectedDay.score >= 70
-                          ? 'bg-emerald-400/20 border-emerald-400 text-emerald-400 shadow-[0_0_30px_rgba(52,211,153,0.3)]'
-                          : 'bg-slate-800/40 border-slate-600 text-slate-300'}
-                      `}>
-                        <span className="text-3xl font-black leading-none">{selectedDay.score}%</span>
-                        <span className="text-[8px] font-black uppercase opacity-70 mt-1 tracking-tighter text-center leading-none px-2">SUCCESS<br/>RATE</span>
-                      </div>
-                    </div>
+                  <div className="bg-slate-100/10 border border-white/10 px-4 py-1.5 rounded-full backdrop-blur-sm mt-2">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-100 whitespace-nowrap">{selectedDay.moonPhase}</span>
                   </div>
                 </div>
-
-                <div className="space-y-6">
-                  <div className="bg-black/40 rounded-[2.5rem] p-6 border border-white/5 backdrop-blur-sm">
-                    <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-6 flex justify-between items-center">
-                      <span>WEATHER DATA</span>
-                      <div className="flex items-center gap-2 text-right">
-                        <CloudRainIcon className="w-4 h-4 text-blue-400" />
-                        <span className="text-[10px] font-black text-slate-100 uppercase tracking-tight">
-                          {selectedDay.weather.conditions}
-                        </span>
-                      </div>
-                    </h4>
-                    
-                    <div className="grid grid-cols-2 gap-6">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-2xl bg-slate-800/60 flex items-center justify-center text-rose-400 border border-white/5 shadow-inner">
-                          <ThermometerIcon className="w-6 h-6" />
-                        </div>
-                        <div>
-                          <p className="text-[8px] font-black text-slate-500 uppercase tracking-tighter">Temp</p>
-                          <p className="text-base font-black text-slate-100">{selectedDay.weather.tempLow}° - {selectedDay.weather.tempHigh}°C</p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-2xl bg-slate-800/60 flex items-center justify-center text-cyan-400 border border-white/5 shadow-inner">
-                          <PressureTrendIcon trend={selectedDay.weather.pressureTrend} className="w-6 h-6" />
-                        </div>
-                        <div>
-                          <p className="text-[8px] font-black text-slate-500 uppercase tracking-tighter">Pressure</p>
-                          <p className="text-base font-black text-slate-100">{selectedDay.weather.pressure} mb</p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-2xl bg-slate-800/60 flex items-center justify-center text-emerald-400 border border-white/5 shadow-inner">
-                          <WindDirectionIcon direction={selectedDay.weather.windDirection} className="w-10 h-10" />
-                        </div>
-                        <div>
-                          <p className="text-[8px] font-black text-slate-500 uppercase tracking-tighter">Wind</p>
-                          <p className="text-base font-black text-slate-100">{selectedDay.weather.windSpeed} km/h</p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-2xl bg-slate-800/60 flex items-center justify-center text-slate-500 border border-white/5 shadow-inner">
-                          <InfoIcon className="w-6 h-6" />
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-[8px] font-black text-slate-500 uppercase tracking-tighter">Trend</p>
-                          <p className="text-[10px] font-black text-slate-400 leading-tight uppercase tracking-widest">
-                            {selectedDay.weather.pressureTrend === 'falling' ? 'Active Bite' : 'Stable Bait'}
-                          </p>
-                        </div>
-                      </div>
+                <div className="w-1/4 flex flex-col items-center relative">
+                  <div className="h-24 flex items-center justify-center">
+                    <div className={`
+                      w-24 h-24 rounded-[2.5rem] flex items-center justify-center flex-col border-2 transition-all duration-700
+                      ${selectedDay.score >= 85 
+                        ? 'bg-violet-400/20 border-violet-400 text-violet-400 shadow-[0_0_40px_rgba(139,92,246,0.6)]' 
+                        : selectedDay.score >= 70
+                        ? 'bg-emerald-400/20 border-emerald-400 text-emerald-400 shadow-[0_0_30px_rgba(52,211,153,0.3)]'
+                        : 'bg-slate-800/40 border-slate-600 text-slate-300'}
+                    `}>
+                      <span className="text-3xl font-black leading-none">{selectedDay.score}%</span>
+                      <span className="text-[8px] font-black uppercase opacity-70 mt-1 tracking-tighter text-center leading-none px-2">SUCCESS<br/>RATE</span>
                     </div>
-                  </div>
-
-                  <ActivityChart day={selectedDay} isToday={isSelectedDayToday} />
-
-                  <div className="grid grid-cols-2 gap-4">
-                    {selectedDay.bestTimes.map((time, idx) => (
-                      <div key={idx} className={`
-                        rounded-[2.5rem] p-6 border text-center transition-all duration-700
-                        ${selectedDay.score >= 85 ? 'bg-violet-500/10 border-violet-500/30 shadow-lg' : selectedDay.score >= 70 ? 'bg-emerald-500/10 border-emerald-500/30 shadow-lg' : 'bg-slate-800/60 border-slate-700'}
-                      `}>
-                        <h4 className="text-[10px] font-black text-slate-500 uppercase mb-2 tracking-widest">
-                          {idx === 0 ? 'Major Peak' : 'Minor Peak'}
-                        </h4>
-                        <p className={`font-black text-xl ${selectedDay.score >= 85 ? 'text-violet-400' : selectedDay.score >= 70 ? 'text-emerald-400' : 'text-slate-100'}`}>{time}</p>
-                      </div>
-                    ))}
                   </div>
                 </div>
               </div>
-            )}
+
+              <div className="space-y-6">
+                <div className="bg-black/40 rounded-[2.5rem] p-6 border border-white/5 backdrop-blur-sm">
+                  <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-6 flex justify-between items-center">
+                    <span>ENVIRONMENT</span>
+                    <div className="flex items-center gap-2 text-right">
+                      <CloudRainIcon className="w-4 h-4 text-blue-400" />
+                      <span className="text-[10px] font-black text-slate-100 uppercase tracking-tight">{selectedDay.weather.conditions}</span>
+                    </div>
+                  </h4>
+                  <div className="grid grid-cols-2 gap-6">
+                    <WeatherStat icon={<ThermometerIcon />} label="Temp" value={`${selectedDay.weather.tempLow}° - ${selectedDay.weather.tempHigh}°C`} color="text-rose-400" />
+                    <WeatherStat icon={<PressureTrendIcon trend={selectedDay.weather.pressureTrend} />} label="Pressure" value={`${selectedDay.weather.pressure} mb`} color="text-cyan-400" />
+                    <WeatherStat icon={<WindDirectionIcon direction={selectedDay.weather.windDirection} />} label="Wind" value={`${selectedDay.weather.windSpeed} km/h`} color="text-emerald-400" />
+                    <WeatherStat icon={<InfoIcon />} label="Trend" value={selectedDay.weather.pressureTrend === 'falling' ? 'Active Bite' : 'Stable Bait'} color="text-slate-500" valueSize="text-[10px]" />
+                  </div>
+                </div>
+
+                <ActivityChart day={selectedDay} isToday={isSelectedDayToday} />
+
+                {/* PEAK ACTIVITY WINDOW (NEW) */}
+                {peakWindow && (
+                  <div className={`
+                    rounded-[2.5rem] p-6 border text-center transition-all duration-700
+                    ${selectedDay.score >= 85 
+                      ? 'bg-gradient-to-r from-violet-600/20 to-cyan-600/20 border-violet-400/40 shadow-[0_0_20px_rgba(139,92,246,0.15)]' 
+                      : selectedDay.score >= 70 
+                      ? 'bg-emerald-500/10 border-emerald-500/30' 
+                      : 'bg-slate-800/60 border-slate-700'}
+                  `}>
+                    <h4 className="text-[10px] font-black text-slate-500 uppercase mb-3 tracking-[0.2em] flex items-center justify-center gap-2">
+                      <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse shadow-[0_0_8px_white]"></div>
+                      Peak Activity Window
+                    </h4>
+                    <p className={`font-black text-xl tracking-tight ${selectedDay.score >= 70 ? 'text-white' : 'text-slate-100'}`}>
+                      {peakWindow.time}
+                    </p>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-2 gap-4">
+                  <PeakBox title="Major Peaks" color="violet" shadow="shadow-violet-500/80" peaks={majorPeaks} score={selectedDay.score} />
+                  <PeakBox title="Minor Peaks" color="cyan" shadow="shadow-cyan-400/60" peaks={minorPeaks} score={selectedDay.score} />
+                </div>
+              </div>
+            </div>
           </>
         )}
       </div>
     </div>
   );
 };
+
+// Fix: Use React.ReactElement<any> to satisfy TypeScript compiler regarding the 'className' prop during cloning.
+const WeatherStat = ({ icon, label, value, color, valueSize = "text-base" }: { icon: any, label: string, value: string, color: string, valueSize?: string }) => (
+  <div className="flex items-center gap-4">
+    <div className={`w-12 h-12 rounded-2xl bg-slate-800/60 flex items-center justify-center ${color} border border-white/5 shadow-inner`}>
+      {React.cloneElement(icon as React.ReactElement<any>, { className: "w-6 h-6" })}
+    </div>
+    <div>
+      <p className="text-[8px] font-black text-slate-500 uppercase tracking-tighter">{label}</p>
+      <p className={`${valueSize} font-black text-slate-100 uppercase`}>{value}</p>
+    </div>
+  </div>
+);
+
+const PeakBox = ({ title, color, shadow, peaks, score }: { title: string, color: string, shadow: string, peaks: any[], score: number }) => (
+  <div className={`
+    rounded-[2.5rem] p-6 border text-center transition-all duration-700
+    ${score >= 85 
+      ? `bg-${color}-500/10 border-${color}-500/30 shadow-lg` 
+      : score >= 70 
+      ? 'bg-emerald-500/10 border-emerald-500/30' 
+      : 'bg-slate-800/60 border-slate-700'}
+  `}>
+    <h4 className="text-[10px] font-black text-slate-500 uppercase mb-4 tracking-widest flex items-center justify-center gap-2">
+      <div className={`w-2 h-2 rounded-full bg-${color}-400 ${shadow} animate-pulse`}></div>
+      {title}
+    </h4>
+    <div className="flex flex-col gap-2">
+      {peaks.length > 0 ? peaks.map((peak, idx) => (
+        <p key={idx} className={`font-black text-2xl tracking-tight ${score >= 85 ? `text-${color}-400` : score >= 70 ? 'text-emerald-400' : 'text-slate-100'}`}>
+          {peak.time}
+        </p>
+      )) : <p className="text-slate-600 font-black">—</p>}
+    </div>
+  </div>
+);
 
 const LegendItem = ({ color, label, shadow = "" }: { color: string, label: string, shadow?: string }) => (
   <div className="flex items-center gap-1.5 flex-shrink-0">
