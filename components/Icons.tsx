@@ -27,6 +27,55 @@ export const MoonIcon = ({ className = "w-6 h-6" }) => (
   </svg>
 );
 
+/**
+ * Renders an accurate visual representation of the moon phase.
+ * phase: 0 (New Moon) -> 0.25 (First Quarter) -> 0.5 (Full Moon) -> 0.75 (Last Quarter) -> 1.0 (New Moon)
+ */
+export const MoonPhaseVisual = ({ phase, className = "w-16 h-16" }: { phase: number, className?: string }) => {
+  // We'll use a simple CSS/SVG trick: 
+  // Two hemispheres and a middle oval that changes width and color.
+  const isWaning = phase > 0.5;
+  const absPhase = phase > 0.5 ? 1 - phase : phase; // 0 to 0.5
+  const percentage = absPhase * 2; // 0 to 1 scale for half-cycle
+  
+  // Determine if the middle oval is "adding" light or "subtracting" it
+  const isCrescent = percentage < 0.5;
+  const ovalWidth = Math.abs(1 - percentage * 2);
+
+  return (
+    <div className={`${className} relative flex items-center justify-center`}>
+      <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">
+        {/* Background (The dark part of the moon) */}
+        <circle cx="50" cy="50" r="45" className="fill-slate-800" />
+        
+        <defs>
+          <clipPath id="leftHalf">
+            <rect x="0" y="0" width="50" height="100" />
+          </clipPath>
+          <clipPath id="rightHalf">
+            <rect x="50" y="0" width="50" height="100" />
+          </clipPath>
+        </defs>
+
+        {/* Base light hemisphere */}
+        <circle 
+          cx="50" cy="50" r="45" 
+          className="fill-slate-100" 
+          clipPath={isWaning ? "url(#leftHalf)" : "url(#rightHalf)"} 
+        />
+
+        {/* The transition ellipse */}
+        <ellipse
+          cx="50" cy="50"
+          rx={45 * ovalWidth}
+          ry="45"
+          className={isCrescent ? "fill-slate-800" : "fill-slate-100"}
+        />
+      </svg>
+    </div>
+  );
+};
+
 export const InfoIcon = ({ className = "w-5 h-5" }) => (
   <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />

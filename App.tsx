@@ -12,7 +12,8 @@ import {
   WindDirectionIcon,
   ThermometerIcon,
   PressureTrendIcon,
-  CloudRainIcon
+  CloudRainIcon,
+  MoonPhaseVisual
 } from './components/Icons';
 import DayCell from './components/DayCell';
 import ActivityChart from './components/ActivityChart';
@@ -28,7 +29,7 @@ const App: React.FC = () => {
   const getBrowserLocation = useCallback(() => {
     setStatus(AppStatus.LOADING);
     if (!navigator.geolocation) {
-      setError("Geolocation is not supported by your browser. Defaulting to Novi Sad.");
+      setError("Geolocation is not supported. Defaulting to Novi Sad.");
       setLocation({ latitude: 45.2671, longitude: 19.8335 });
       return;
     }
@@ -56,7 +57,8 @@ const App: React.FC = () => {
 
     try {
       setStatus(AppStatus.LOADING);
-      await new Promise(r => setTimeout(r, 800));
+      // Artificial delay for feel
+      await new Promise(r => setTimeout(r, 600));
       
       const data = await calculateFishingForecast(
         currentDate.getMonth() + 1,
@@ -75,7 +77,7 @@ const App: React.FC = () => {
       }
     } catch (err) {
       console.error(err);
-      setError("Failed to calculate forecast locally.");
+      setError("Failed to calculate forecast.");
       setStatus(AppStatus.ERROR);
     }
   }, [currentDate, location]);
@@ -160,7 +162,7 @@ const App: React.FC = () => {
               ANGLER'S PULSE
             </h1>
             <p className="text-[10px] text-slate-500 uppercase tracking-[0.2em] font-black flex items-center gap-1.5">
-              <FishIcon className="w-3.5 h-3.5" /> Solunar Fishing Forecast
+              <FishIcon className="w-3.5 h-3.5" /> Solunar Forecast
             </p>
           </div>
           <button 
@@ -191,8 +193,7 @@ const App: React.FC = () => {
               <FishIcon className="w-8 h-8 text-violet-400 absolute inset-0 m-auto animate-pulse" />
             </div>
             <div className="text-center">
-              <p className="text-violet-400 font-black tracking-widest text-xs uppercase animate-pulse">Calculating Tides & Stars...</p>
-              <p className="text-slate-500 text-[10px] mt-1 font-medium uppercase">Processing Offline Forecast...</p>
+              <p className="text-violet-400 font-black tracking-widest text-xs uppercase animate-pulse">Scanning Lunar Tides...</p>
             </div>
           </div>
         )}
@@ -230,103 +231,120 @@ const App: React.FC = () => {
 
             {selectedDay && (
               <div className={`
-                rounded-[3rem] p-8 transition-all duration-700 border shadow-2xl overflow-hidden relative
+                rounded-[3.5rem] p-8 transition-all duration-700 border shadow-2xl overflow-hidden relative
                 ${selectedDay.score >= 85 
-                  ? 'bg-violet-900/30 border-violet-400/50 shadow-violet-900/40' 
+                  ? 'bg-violet-900/40 border-violet-400/60 shadow-violet-900/50' 
                   : selectedDay.score >= 70
-                  ? 'bg-emerald-900/20 border-emerald-500/30 shadow-emerald-900/20'
+                  ? 'bg-emerald-900/30 border-emerald-500/40 shadow-emerald-900/30'
                   : selectedDay.score >= 40
-                  ? 'bg-slate-900/60 border-slate-700 shadow-black/80'
-                  : 'bg-black/80 border-slate-800 shadow-black'}
+                  ? 'bg-slate-900/80 border-slate-700 shadow-black/80'
+                  : 'bg-black/90 border-slate-800 shadow-black'}
               `}>
-                <div className="absolute top-4 left-4">
-                   <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest bg-white/5 px-2 py-1 rounded">Local Calculation</span>
+                <div className="absolute top-6 left-8 pointer-events-none">
+                   <span className="text-[7px] font-black text-slate-400 uppercase tracking-[0.3em] bg-white/5 px-3 py-1 rounded-full border border-white/10">LOCAL CALCULATION</span>
                 </div>
 
-                {selectedDay.score >= 85 && (
-                  <div className="absolute top-0 right-0 p-4">
-                    <div className="bg-gradient-to-r from-violet-400 to-fuchsia-500 text-white text-[9px] font-black px-4 py-1.5 rounded-full animate-bounce shadow-lg shadow-violet-500/50 uppercase tracking-widest">
-                      EPIC CONDITIONS
+                {/* THE REFINED HEADER LAYOUT ALIGNED BY CENTERLINE */}
+                <div className="flex justify-between items-start mb-10 mt-6 px-2">
+                  {/* DATE BLOCK - Day number is centered in its own 24-unit container to match moon icon's vertical center */}
+                  <div className="w-1/4 flex flex-col items-center">
+                    <div className="h-24 flex items-center justify-center">
+                      <h3 className="text-6xl font-black leading-none tracking-tighter">
+                        {selectedDay.day}
+                      </h3>
                     </div>
+                    <p className="text-lg text-slate-400 font-bold uppercase tracking-tight -mt-4">
+                      {monthName.slice(0, 3)}
+                    </p>
                   </div>
-                )}
 
-                <div className="flex justify-between items-start mb-8 mt-4">
-                  <div>
-                    <h3 className="text-5xl font-black mb-1.5 flex items-baseline gap-2">
-                      {selectedDay.day}
-                      <span className="text-xl text-slate-500 font-bold uppercase tracking-tighter">
-                        {monthName.slice(0, 3)}
+                  {/* VISUAL MOON BLOCK - Primary Center Reference */}
+                  <div className="flex-1 flex flex-col items-center">
+                    <div className="h-24 flex items-center justify-center">
+                      <MoonPhaseVisual phase={selectedDay.moonPhaseValue} className="w-24 h-24" />
+                    </div>
+                    <div className="bg-slate-100/10 border border-white/10 px-4 py-1.5 rounded-full backdrop-blur-sm mt-2">
+                      <span className="text-[10px] font-black uppercase tracking-widest text-slate-100 whitespace-nowrap">
+                        {selectedDay.moonPhase}
                       </span>
-                    </h3>
-                    <div className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-widest ${selectedDay.score >= 85 ? 'text-violet-400' : selectedDay.score >= 70 ? 'text-emerald-400' : 'text-slate-500'}`}>
-                      <MoonIcon className="w-4 h-4" />
-                      {selectedDay.moonPhase}
                     </div>
                   </div>
-                  <div className={`
-                    w-24 h-24 rounded-[2.5rem] flex items-center justify-center flex-col border-2 transition-all duration-700
-                    ${selectedDay.score >= 85 
-                      ? 'bg-violet-400/10 border-violet-400 text-violet-400 shadow-[0_0_30px_rgba(139,92,246,0.4)]' 
-                      : selectedDay.score >= 70
-                      ? 'bg-emerald-400/10 border-emerald-400 text-emerald-400'
-                      : 'bg-slate-800/20 border-slate-700 text-slate-400'}
-                  `}>
-                    <span className="text-3xl font-black leading-none">{selectedDay.score}%</span>
-                    <span className="text-[9px] font-black uppercase opacity-60 mt-1 tracking-tighter">Success Rate</span>
+
+                  {/* SUCCESS RATE BLOCK - Aligned by circle center with Epic conditions badge directly above */}
+                  <div className="w-1/4 flex flex-col items-center relative">
+                    <div className="absolute -top-6 flex justify-center w-full">
+                      {selectedDay.score >= 85 && (
+                        <div className="bg-gradient-to-r from-violet-400 to-fuchsia-500 text-white text-[8px] font-black px-4 py-1.5 rounded-full animate-bounce shadow-lg shadow-violet-500/50 uppercase tracking-widest whitespace-nowrap">
+                          EPIC CONDITIONS
+                        </div>
+                      )}
+                    </div>
+                    <div className="h-24 flex items-center justify-center">
+                      <div className={`
+                        w-24 h-24 rounded-[2.5rem] flex items-center justify-center flex-col border-2 transition-all duration-700
+                        ${selectedDay.score >= 85 
+                          ? 'bg-violet-400/20 border-violet-400 text-violet-400 shadow-[0_0_40px_rgba(139,92,246,0.6)]' 
+                          : selectedDay.score >= 70
+                          ? 'bg-emerald-400/20 border-emerald-400 text-emerald-400 shadow-[0_0_30px_rgba(52,211,153,0.3)]'
+                          : 'bg-slate-800/40 border-slate-600 text-slate-300'}
+                      `}>
+                        <span className="text-3xl font-black leading-none">{selectedDay.score}%</span>
+                        <span className="text-[8px] font-black uppercase opacity-70 mt-1 tracking-tighter text-center leading-none px-2">SUCCESS<br/>RATE</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
                 <div className="space-y-6">
-                  <div className="bg-black/30 rounded-[2.5rem] p-6 border border-white/5 backdrop-blur-sm">
-                    <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4 flex justify-between items-center gap-4">
-                      <span>OFFLINE PULSE</span>
-                      <div className="flex items-center gap-1.5 text-right flex-1 justify-end">
-                        <CloudRainIcon className="w-3.5 h-3.5 text-blue-400" />
-                        <span className="text-[9px] font-bold text-slate-100 uppercase tracking-tight">
+                  <div className="bg-black/40 rounded-[2.5rem] p-6 border border-white/5 backdrop-blur-sm">
+                    <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-6 flex justify-between items-center">
+                      <span>WEATHER DATA</span>
+                      <div className="flex items-center gap-2 text-right">
+                        <CloudRainIcon className="w-4 h-4 text-blue-400" />
+                        <span className="text-[10px] font-black text-slate-100 uppercase tracking-tight">
                           {selectedDay.weather.conditions}
                         </span>
                       </div>
                     </h4>
                     
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-slate-800/40 flex items-center justify-center text-rose-400 border border-white/5">
-                          <ThermometerIcon />
+                    <div className="grid grid-cols-2 gap-6">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-2xl bg-slate-800/60 flex items-center justify-center text-rose-400 border border-white/5 shadow-inner">
+                          <ThermometerIcon className="w-6 h-6" />
                         </div>
                         <div>
                           <p className="text-[8px] font-black text-slate-500 uppercase tracking-tighter">Temp</p>
-                          <p className="text-sm font-black text-slate-100">{selectedDay.weather.tempLow}° - {selectedDay.weather.tempHigh}°C</p>
+                          <p className="text-base font-black text-slate-100">{selectedDay.weather.tempLow}° - {selectedDay.weather.tempHigh}°C</p>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-slate-800/40 flex items-center justify-center text-cyan-400 border border-white/5">
-                          <PressureTrendIcon trend={selectedDay.weather.pressureTrend} />
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-2xl bg-slate-800/60 flex items-center justify-center text-cyan-400 border border-white/5 shadow-inner">
+                          <PressureTrendIcon trend={selectedDay.weather.pressureTrend} className="w-6 h-6" />
                         </div>
                         <div>
                           <p className="text-[8px] font-black text-slate-500 uppercase tracking-tighter">Pressure</p>
-                          <p className="text-sm font-black text-slate-100">{selectedDay.weather.pressure} mb</p>
+                          <p className="text-base font-black text-slate-100">{selectedDay.weather.pressure} mb</p>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-slate-800/40 flex items-center justify-center text-emerald-400 border border-white/5">
-                          <WindDirectionIcon direction={selectedDay.weather.windDirection} />
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-2xl bg-slate-800/60 flex items-center justify-center text-emerald-400 border border-white/5 shadow-inner">
+                          <WindDirectionIcon direction={selectedDay.weather.windDirection} className="w-10 h-10" />
                         </div>
                         <div>
                           <p className="text-[8px] font-black text-slate-500 uppercase tracking-tighter">Wind</p>
-                          <p className="text-sm font-black text-slate-100">{selectedDay.weather.windSpeed} km/h</p>
+                          <p className="text-base font-black text-slate-100">{selectedDay.weather.windSpeed} km/h</p>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-slate-800/40 flex items-center justify-center text-slate-500 border border-white/5">
-                          <InfoIcon />
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-2xl bg-slate-800/60 flex items-center justify-center text-slate-500 border border-white/5 shadow-inner">
+                          <InfoIcon className="w-6 h-6" />
                         </div>
                         <div className="flex-1">
                           <p className="text-[8px] font-black text-slate-500 uppercase tracking-tighter">Trend</p>
-                          <p className="text-[9px] font-bold text-slate-500 leading-tight uppercase tracking-tighter">
+                          <p className="text-[10px] font-black text-slate-400 leading-tight uppercase tracking-widest">
                             {selectedDay.weather.pressureTrend === 'falling' ? 'Active Bite' : 'Stable Bait'}
                           </p>
                         </div>
@@ -339,13 +357,13 @@ const App: React.FC = () => {
                   <div className="grid grid-cols-2 gap-4">
                     {selectedDay.bestTimes.map((time, idx) => (
                       <div key={idx} className={`
-                        rounded-[2rem] p-5 border text-center transition-all duration-700
-                        ${selectedDay.score >= 85 ? 'bg-violet-500/5 border-violet-500/20 shadow-lg shadow-violet-900/10' : selectedDay.score >= 70 ? 'bg-emerald-500/5 border-emerald-500/20 shadow-lg shadow-emerald-900/10' : 'bg-slate-800/40 border-slate-800'}
+                        rounded-[2.5rem] p-6 border text-center transition-all duration-700
+                        ${selectedDay.score >= 85 ? 'bg-violet-500/10 border-violet-500/30 shadow-lg' : selectedDay.score >= 70 ? 'bg-emerald-500/10 border-emerald-500/30 shadow-lg' : 'bg-slate-800/60 border-slate-700'}
                       `}>
-                        <h4 className="text-[9px] font-black text-slate-500 uppercase mb-1 tracking-widest">
+                        <h4 className="text-[10px] font-black text-slate-500 uppercase mb-2 tracking-widest">
                           {idx === 0 ? 'Major Peak' : 'Minor Peak'}
                         </h4>
-                        <p className={`font-black text-lg ${selectedDay.score >= 85 ? 'text-violet-400' : selectedDay.score >= 70 ? 'text-emerald-400' : 'text-slate-100'}`}>{time}</p>
+                        <p className={`font-black text-xl ${selectedDay.score >= 85 ? 'text-violet-400' : selectedDay.score >= 70 ? 'text-emerald-400' : 'text-slate-100'}`}>{time}</p>
                       </div>
                     ))}
                   </div>
