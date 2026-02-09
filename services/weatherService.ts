@@ -1,13 +1,9 @@
+
 import { Location, WeatherInfo } from "../types";
 
 /**
  * Daily weather cache (fetch once per day on app startup).
  * Stores a rolling window: (today - PAST_DAYS) .. (today + FUTURE_DAYS).
- *
- * Sources (Open-Meteo):
- * - Past days: archive-api.open-meteo.com/v1/archive
- * - Short-term: api.open-meteo.com/v1/forecast (<= 16 days)
- * - Longer-term: seasonal-api.open-meteo.com/v1/seasonal
  */
 
 type OpenMeteoHourly = {
@@ -37,8 +33,8 @@ const ARCHIVE_BASE = "https://archive-api.open-meteo.com/v1/archive";
 
 const SHORT_TERM_DAYS = 16;
 
-const PAST_DAYS = 7;    // keep last week real (set 0 if you don’t need)
-const FUTURE_DAYS = 60; // your “two months” target
+const PAST_DAYS = 7;    
+const FUTURE_DAYS = 60; 
 
 const PRESSURE_TREND_EPS = 1.0;
 
@@ -72,14 +68,9 @@ function cleanupOldCacheKeepOnly(keyToKeep: string) {
 
 // ------------ Public API ------------
 
-/**
- * Fetch once per day (on startup) and cache.
- * Returns rolling daily weather map keyed by YYYY-MM-DD.
- */
 export async function fetchDailyWeatherCache(location: Location): Promise<Record<string, WeatherInfo>> {
   const cacheKey = getDailyCacheKey(location);
 
-  // Read cache
   try {
     const raw = localStorage.getItem(cacheKey);
     if (raw) {
@@ -92,53 +83,46 @@ export async function fetchDailyWeatherCache(location: Location): Promise<Record
     console.warn("Failed to read daily weather cache", e);
   }
 
-  // Housekeeping (remove other location caches)
   cleanupOldCacheKeepOnly(cacheKey);
 
-  // Build rolling window
   const today = stripTime(new Date());
   const start = addDays(today, -PAST_DAYS);
   const end = addDays(today, FUTURE_DAYS);
 
   const out: Record<string, WeatherInfo> = {};
 
-  // Segment A: past (archive) [start .. yesterday]
   const yesterday = addDays(today, -1);
   if (start <= yesterday) {
     try {
       const pastMap = await fetchAndAggregateDaily("archive", start, yesterday, location);
       Object.assign(out, pastMap);
     } catch (e) {
-      console.warn("Archive API failed (past segment)", e);
+      console.warn("Archive API failed", e);
     }
   }
 
-  // Segment B: short-term forecast [today .. min(today+15, end)]
   const shortEnd = minDate(end, addDays(today, SHORT_TERM_DAYS - 1));
   if (today <= shortEnd) {
     try {
       const shortMap = await fetchAndAggregateDaily("forecast", today, shortEnd, location);
       Object.assign(out, shortMap);
     } catch (e) {
-      console.warn("Forecast API failed (short segment)", e);
+      console.warn("Forecast API failed", e);
     }
   }
 
-  // Segment C: seasonal [shortEnd+1 .. end]
   const longStart = addDays(shortEnd, 1);
   if (longStart <= end) {
     try {
       const longMap = await fetchAndAggregateDaily("seasonal", longStart, end, location);
       Object.assign(out, longMap);
     } catch (e) {
-      console.warn("Seasonal API failed (long segment)", e);
+      console.warn("Seasonal API failed", e);
     }
   }
 
-  // Fill gaps defensively
   fillMissingDays(out, start, end);
 
-  // Save cache (overwrite old)
   try {
     const entry: WeatherCacheEntry = {
       fetchedAt: Date.now(),
@@ -154,10 +138,6 @@ export async function fetchDailyWeatherCache(location: Location): Promise<Record
   return out;
 }
 
-/**
- * Compatibility helper if your solunar UI expects "monthly weather":
- * it slices the already cached rolling window.
- */
 export async function fetchMonthlyWeather(
   month: number,
   year: number,
@@ -176,7 +156,6 @@ export async function fetchMonthlyWeather(
     cur.setDate(cur.getDate() + 1);
   }
 
-  // If month extends beyond cached range, still fill something
   fillMissingDays(out, start, end);
   return out;
 }
@@ -209,7 +188,6 @@ async function fetchAndAggregateDaily(
   const wdir = wind_direction_10m ?? [];
   const wcode = weather_code ?? [];
 
-  // bucket by YYYY-MM-DD (timezone=auto)
   const buckets: Record<string, number[]> = {};
   for (let i = 0; i < time.length; i++) {
     const k = time[i].slice(0, 10);
@@ -219,9 +197,13 @@ async function fetchAndAggregateDaily(
   const out: Record<string, WeatherInfo> = {};
   const dayCursor = new Date(start);
 
-  // IMPORTANT: pressure trend should compare day-to-day in chronological order,
-  // so we compute with a running prevPressure over this segment.
   let prevPressure: number | null = null;
+  
+  // Map internal source kind to user-friendly categories
+  const mappedSource: WeatherInfo['dataSource'] = 
+    source === 'forecast' ? 'short-term' : 
+    source === 'seasonal' ? 'long-term' : 
+    'historical';
 
   while (dayCursor <= end) {
     const k = toDateStr(dayCursor);
@@ -262,6 +244,7 @@ async function fetchAndAggregateDaily(
       windSpeed,
       windDirection: windDirection as any,
       conditions,
+      dataSource: mappedSource,
     };
 
     prevPressure = pressure;
@@ -298,8 +281,6 @@ function buildOpenMeteoUrl(source: SourceKind, start: Date, end: Date, location:
   return `${base}?${params.toString()}`;
 }
 
-// ------------ conditions & wind helpers (same as yours) ------------
-
 function codesToCondition(codes: number[]): WeatherInfo["conditions"] {
   let hasStorm = false, hasSnow = false, hasRain = false, hasFog = false, hasCloud = false;
   for (const c of codes) {
@@ -334,8 +315,6 @@ function degreesToCardinal(deg: number): string {
   return dirs[Math.round(deg / 45) % 8];
 }
 
-// ------------ date & math utils (same style as yours) ------------
-
 function toDateStr(d: Date): string {
   const yyyy = d.getFullYear();
   const mm = String(d.getMonth() + 1).padStart(2, "0");
@@ -357,10 +336,6 @@ function minDate(a: Date, b: Date): Date {
   return a.getTime() <= b.getTime() ? a : b;
 }
 
-function maxDate(a: Date, b: Date): Date {
-  return a.getTime() >= b.getTime() ? a : b;
-}
-
 function fillMissingDays(map: Record<string, WeatherInfo>, start: Date, end: Date) {
   const cur = new Date(start);
   let last: WeatherInfo | null = null;
@@ -377,6 +352,7 @@ function fillMissingDays(map: Record<string, WeatherInfo>, start: Date, end: Dat
       windSpeed: 5,
       windDirection: "NW",
       conditions: "Clear",
+      dataSource: 'long-term',
     };
     cur.setDate(cur.getDate() + 1);
   }

@@ -147,6 +147,15 @@ const App: React.FC = () => {
     selectedDay?.events.filter(e => e.type === 'minor').sort((a, b) => a.time.localeCompare(b.time)) || [], 
   [selectedDay]);
 
+  const getWeatherLabel = () => {
+    if (!selectedDay) return "WEATHER DATA";
+    const source = selectedDay.weather.dataSource;
+    if (source === 'short-term') return "SHORT-TERM WEATHER DATA";
+    if (source === 'long-term') return "LONG-TERM WEATHER DATA";
+    if (source === 'historical') return "HISTORICAL WEATHER DATA";
+    return "WEATHER DATA";
+  };
+
   return (
     <div className={`
       min-h-screen transition-colors duration-1000 overflow-x-hidden relative pb-12
@@ -301,13 +310,7 @@ const App: React.FC = () => {
                 <div className="space-y-6">
                   <div className="bg-black/40 rounded-[2.5rem] p-6 border border-white/5 backdrop-blur-sm">
                     <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-6 flex justify-between items-center">
-                      <span>WEATHER DATA</span>
-                      <div className="flex items-center gap-2 text-right">
-                        <CloudRainIcon className="w-4 h-4 text-blue-400" />
-                        <span className="text-[10px] font-black text-slate-100 uppercase tracking-tight">
-                          {selectedDay.weather.conditions}
-                        </span>
-                      </div>
+                      <span>{getWeatherLabel()}</span>
                     </h4>
                     
                     <div className="grid grid-cols-2 gap-6">
@@ -342,13 +345,13 @@ const App: React.FC = () => {
                       </div>
 
                       <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-2xl bg-slate-800/60 flex items-center justify-center text-slate-500 border border-white/5 shadow-inner">
-                          <InfoIcon className="w-6 h-6" />
+                        <div className="w-12 h-12 rounded-2xl bg-slate-800/60 flex items-center justify-center text-blue-400 border border-white/5 shadow-inner">
+                          <CloudRainIcon className="w-6 h-6" />
                         </div>
                         <div className="flex-1">
-                          <p className="text-[8px] font-black text-slate-500 uppercase tracking-tighter">Trend</p>
-                          <p className="text-[10px] font-black text-slate-400 leading-tight uppercase tracking-widest">
-                            {selectedDay.weather.pressureTrend === 'falling' ? 'Active Bite' : 'Stable Bait'}
+                          <p className="text-[8px] font-black text-slate-500 uppercase tracking-tighter">Conditions</p>
+                          <p className="text-base font-black text-slate-100 uppercase tracking-tight">
+                            {selectedDay.weather.conditions}
                           </p>
                         </div>
                       </div>

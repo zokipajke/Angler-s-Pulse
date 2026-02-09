@@ -13,6 +13,7 @@ export interface WeatherInfo {
   windSpeed: number; // in km/h
   windDirection: string;
   conditions: string;
+  dataSource?: 'historical' | 'short-term' | 'long-term';
 }
 
 export interface FishingDay {
