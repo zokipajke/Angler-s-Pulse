@@ -1,10 +1,14 @@
-
 import SunCalc from "suncalc";
 import { MonthlyForecast, Location, FishingDay, SolarLunarEvent, WeatherInfo } from "../types";
 
 /**
  * Offline Solunar service (SunCalc-based) + Solar–Lunar Alignment
  * + "Peak Activity Window" feature.
+ *
+ * Peak Activity Window definition (Solar–Lunar Alignment):
+ * - Choose the single "best" center among Majors & Minors:
+ *   - Prefer events aligned with sunrise/sunset (within ALIGNMENT_WINDOW_MIN)
+ *   - Prefer Major over Minor
  */
 
 // -------------------- knobs --------------------
@@ -15,8 +19,8 @@ const ALIGNMENT_BONUS_MAJOR = 10;
 const ALIGNMENT_BONUS_MINOR = 5;
 const ALIGNMENT_BONUS_CAP = 20;
 
-const HOUR_ALIGN_BOOST_MAJOR = 35; // Increased boost
-const HOUR_ALIGN_BOOST_MINOR = 20;
+const HOUR_ALIGN_BOOST_MAJOR = 30;
+const HOUR_ALIGN_BOOST_MINOR = 15;
 
 // Peak Window widths
 const MAJOR_HALF_MIN = 60; // 2h total
@@ -298,60 +302,28 @@ export async function calculateFishingForecast(
 
     for (let h = 0; h < 24; h++) {
       const hMin = h * 60;
-      let hScore = 20; // Slightly higher base
-
-      // Solar crepuscular bumps
+      let hScore = 18;
       for (const anchor of [sunriseMin, sunsetMin]) {
         const diff = circularDiffMinutes(hMin, anchor);
-        if (diff < 90) {
-          const effect = Math.cos((diff / 90) * (Math.PI / 2));
-          hScore += effect * 25;
-        }
+        if (diff < 120) hScore += (120 - diff) * (20 / 120);
       }
-
-      // Major peaks
       for (let i = 0; i < peaks.major.length; i++) {
         const t = peaks.major[i];
         const peakMin = majorsMin[i];
-        if (peakMin === -1) continue;
         const diff = circularDiffMinutes(hMin, peakMin);
         const aligned = isAligned(t, solar.sunrise, solar.sunset);
-        const amp = aligned ? 50 + HOUR_ALIGN_BOOST_MAJOR : 50;
-        if (diff < 120) {
-          const effect = Math.pow(Math.cos((diff / 120) * (Math.PI / 2)), 2);
-          hScore += effect * amp;
-        }
+        const amp = aligned ? 40 + HOUR_ALIGN_BOOST_MAJOR : 40;
+        if (diff < 90) hScore += (90 - diff) * (amp / 90);
       }
-
-      // Minor peaks
       for (let i = 0; i < minorTimes.length; i++) {
         const t = minorTimes[i];
         const peakMin = minorsMin[i];
-        if (peakMin === -1) continue;
         const diff = circularDiffMinutes(hMin, peakMin);
         const aligned = isAligned(t, solar.sunrise, solar.sunset);
-        const amp = aligned ? 25 + HOUR_ALIGN_BOOST_MINOR : 25;
-        if (diff < 75) {
-          const effect = Math.pow(Math.cos((diff / 75) * (Math.PI / 2)), 2);
-          hScore += effect * amp;
-        }
+        const amp = aligned ? 18 + HOUR_ALIGN_BOOST_MINOR : 18;
+        if (diff < 60) hScore += (60 - diff) * (amp / 60);
       }
-
       hourlyActivity.push(Math.min(100, Math.max(10, Math.floor(hScore))));
-    }
-
-    // NORMALIZATION STEP: Ensure high success-rate days reach peak intensity on the chart
-    const maxHourVal = Math.max(...hourlyActivity);
-    if (finalScore >= 85 && maxHourVal < 95) {
-      const ratio = 100 / maxHourVal;
-      for (let i = 0; i < 24; i++) {
-        hourlyActivity[i] = Math.min(100, Math.floor(hourlyActivity[i] * ratio));
-      }
-    } else if (finalScore >= 70 && maxHourVal < 80) {
-      const ratio = 85 / maxHourVal;
-      for (let i = 0; i < 24; i++) {
-        hourlyActivity[i] = Math.floor(hourlyActivity[i] * ratio);
-      }
     }
 
     const events: SolarLunarEvent[] = [
