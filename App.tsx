@@ -56,7 +56,6 @@ const App: React.FC = () => {
 
     try {
       setStatus(AppStatus.LOADING);
-      // Brief simulated delay for UX feel, even though calculation is offline
       await new Promise(r => setTimeout(r, 800));
       
       const data = await calculateFishingForecast(
@@ -142,22 +141,22 @@ const App: React.FC = () => {
 
   return (
     <div className={`
-      min-h-screen transition-colors duration-1000 overflow-x-hidden
-      ${scoreIntensity >= 85 ? 'bg-cyan-950/20' : scoreIntensity >= 50 ? 'bg-slate-900' : 'bg-black'}
+      min-h-screen transition-colors duration-1000 overflow-x-hidden relative pb-12
+      ${scoreIntensity >= 85 ? 'bg-violet-950/20' : scoreIntensity >= 60 ? 'bg-slate-900' : 'bg-black'}
     `}>
       <div className={`
         fixed inset-0 pointer-events-none transition-opacity duration-1000
         ${scoreIntensity >= 85 ? 'opacity-30' : scoreIntensity >= 70 ? 'opacity-20' : 'opacity-5'}
       `} style={{ 
         background: scoreIntensity >= 70 
-          ? `radial-gradient(circle at 50% 10%, ${scoreIntensity >= 85 ? 'rgba(34, 211, 238, 0.4)' : 'rgba(52, 211, 153, 0.2)'}, transparent 80%)` 
+          ? `radial-gradient(circle at 50% 10%, ${scoreIntensity >= 85 ? 'rgba(139, 92, 246, 0.4)' : 'rgba(52, 211, 153, 0.2)'}, transparent 80%)` 
           : '' 
       }} />
 
-      <div className="max-w-md mx-auto flex flex-col px-4 pb-24 relative z-10">
+      <div className="max-w-md mx-auto flex flex-col px-4 relative z-10">
         <header className="py-6 flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-400 to-emerald-400 tracking-tighter">
+            <h1 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-violet-400 via-cyan-400 to-emerald-400 tracking-tighter">
               ANGLER'S PULSE
             </h1>
             <p className="text-[10px] text-slate-500 uppercase tracking-[0.2em] font-black flex items-center gap-1.5">
@@ -173,14 +172,14 @@ const App: React.FC = () => {
         </header>
 
         <div className="flex items-center justify-between mb-6 bg-slate-900/40 rounded-[2.5rem] p-1.5 border border-white/10 backdrop-blur-md shadow-2xl">
-          <button onClick={() => changeMonth(-1)} className="w-12 h-12 flex items-center justify-center text-cyan-400 active:scale-75 transition-transform">
+          <button onClick={() => changeMonth(-1)} className="w-12 h-12 flex items-center justify-center text-violet-400 active:scale-75 transition-transform">
             <ChevronLeft className="w-6 h-6" />
           </button>
           <div className="text-center">
             <h2 className="text-lg font-black text-slate-100 uppercase tracking-tight">{monthName}</h2>
             <p className="text-[10px] text-slate-500 font-bold tracking-widest uppercase">{year}</p>
           </div>
-          <button onClick={() => changeMonth(1)} className="w-12 h-12 flex items-center justify-center text-cyan-400 active:scale-75 transition-transform">
+          <button onClick={() => changeMonth(1)} className="w-12 h-12 flex items-center justify-center text-violet-400 active:scale-75 transition-transform">
             <ChevronRight className="w-6 h-6" />
           </button>
         </div>
@@ -188,11 +187,11 @@ const App: React.FC = () => {
         {status === AppStatus.LOADING && (
           <div className="flex-1 flex flex-col items-center justify-center py-20 space-y-6">
             <div className="relative">
-              <div className="w-20 h-20 border-4 border-cyan-400/5 border-t-cyan-400 rounded-full animate-spin"></div>
-              <FishIcon className="w-8 h-8 text-cyan-400 absolute inset-0 m-auto animate-pulse" />
+              <div className="w-20 h-20 border-4 border-violet-400/5 border-t-violet-400 rounded-full animate-spin"></div>
+              <FishIcon className="w-8 h-8 text-violet-400 absolute inset-0 m-auto animate-pulse" />
             </div>
             <div className="text-center">
-              <p className="text-cyan-400 font-black tracking-widest text-xs uppercase animate-pulse">Calculating Tides & Stars...</p>
+              <p className="text-violet-400 font-black tracking-widest text-xs uppercase animate-pulse">Calculating Tides & Stars...</p>
               <p className="text-slate-500 text-[10px] mt-1 font-medium uppercase">Processing Offline Forecast...</p>
             </div>
           </div>
@@ -215,18 +214,25 @@ const App: React.FC = () => {
 
         {status === AppStatus.SUCCESS && (
           <>
-            <div className="grid grid-cols-7 gap-1.5 mb-8 bg-slate-900/30 p-4 rounded-[2.5rem] border border-white/5 backdrop-blur-sm shadow-xl">
+            <div className="grid grid-cols-7 gap-1.5 mb-2 bg-slate-900/30 p-4 rounded-[2.5rem] border border-white/5 backdrop-blur-sm shadow-xl">
               {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(d => (
                 <div key={d} className="text-center text-[10px] font-black text-slate-600 pb-2 uppercase">{d}</div>
               ))}
               {renderCalendar()}
             </div>
 
+            <div className="flex justify-center gap-4 py-4 mb-6">
+              <LegendItem color="bg-violet-500" label="Epic" shadow="shadow-violet-500/50" />
+              <LegendItem color="bg-emerald-400" label="Good" shadow="shadow-emerald-400/50" />
+              <LegendItem color="bg-amber-400" label="Fair" shadow="shadow-amber-400/50" />
+              <LegendItem color="bg-slate-700" label="Poor" />
+            </div>
+
             {selectedDay && (
               <div className={`
                 rounded-[3rem] p-8 transition-all duration-700 border shadow-2xl overflow-hidden relative
                 ${selectedDay.score >= 85 
-                  ? 'bg-cyan-900/30 border-cyan-400/50 shadow-cyan-900/40' 
+                  ? 'bg-violet-900/30 border-violet-400/50 shadow-violet-900/40' 
                   : selectedDay.score >= 70
                   ? 'bg-emerald-900/20 border-emerald-500/30 shadow-emerald-900/20'
                   : selectedDay.score >= 40
@@ -239,7 +245,7 @@ const App: React.FC = () => {
 
                 {selectedDay.score >= 85 && (
                   <div className="absolute top-0 right-0 p-4">
-                    <div className="bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 text-[9px] font-black px-4 py-1.5 rounded-full animate-bounce shadow-lg shadow-amber-500/50 uppercase tracking-widest">
+                    <div className="bg-gradient-to-r from-violet-400 to-fuchsia-500 text-white text-[9px] font-black px-4 py-1.5 rounded-full animate-bounce shadow-lg shadow-violet-500/50 uppercase tracking-widest">
                       EPIC CONDITIONS
                     </div>
                   </div>
@@ -253,7 +259,7 @@ const App: React.FC = () => {
                         {monthName.slice(0, 3)}
                       </span>
                     </h3>
-                    <div className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-widest ${selectedDay.score >= 70 ? 'text-cyan-400' : 'text-slate-500'}`}>
+                    <div className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-widest ${selectedDay.score >= 85 ? 'text-violet-400' : selectedDay.score >= 70 ? 'text-emerald-400' : 'text-slate-500'}`}>
                       <MoonIcon className="w-4 h-4" />
                       {selectedDay.moonPhase}
                     </div>
@@ -261,7 +267,7 @@ const App: React.FC = () => {
                   <div className={`
                     w-24 h-24 rounded-[2.5rem] flex items-center justify-center flex-col border-2 transition-all duration-700
                     ${selectedDay.score >= 85 
-                      ? 'bg-cyan-400/10 border-cyan-400 text-cyan-400 shadow-[0_0_30px_rgba(34,211,238,0.4)]' 
+                      ? 'bg-violet-400/10 border-violet-400 text-violet-400 shadow-[0_0_30px_rgba(139,92,246,0.4)]' 
                       : selectedDay.score >= 70
                       ? 'bg-emerald-400/10 border-emerald-400 text-emerald-400'
                       : 'bg-slate-800/20 border-slate-700 text-slate-400'}
@@ -334,25 +340,18 @@ const App: React.FC = () => {
                     {selectedDay.bestTimes.map((time, idx) => (
                       <div key={idx} className={`
                         rounded-[2rem] p-5 border text-center transition-all duration-700
-                        ${selectedDay.score >= 70 ? 'bg-cyan-500/5 border-cyan-500/20 shadow-lg shadow-cyan-900/10' : 'bg-slate-800/40 border-slate-800'}
+                        ${selectedDay.score >= 85 ? 'bg-violet-500/5 border-violet-500/20 shadow-lg shadow-violet-900/10' : selectedDay.score >= 70 ? 'bg-emerald-500/5 border-emerald-500/20 shadow-lg shadow-emerald-900/10' : 'bg-slate-800/40 border-slate-800'}
                       `}>
                         <h4 className="text-[9px] font-black text-slate-500 uppercase mb-1 tracking-widest">
                           {idx === 0 ? 'Major Peak' : 'Minor Peak'}
                         </h4>
-                        <p className={`font-black text-lg ${selectedDay.score >= 70 ? 'text-cyan-400' : 'text-slate-100'}`}>{time}</p>
+                        <p className={`font-black text-lg ${selectedDay.score >= 85 ? 'text-violet-400' : selectedDay.score >= 70 ? 'text-emerald-400' : 'text-slate-100'}`}>{time}</p>
                       </div>
                     ))}
                   </div>
                 </div>
               </div>
             )}
-
-            <div className="mt-12 flex justify-center gap-6 px-4 overflow-x-auto pb-4 no-scrollbar">
-              <LegendItem color="bg-cyan-400" label="Epic" shadow="shadow-cyan-500/50" />
-              <LegendItem color="bg-emerald-400" label="Good" shadow="shadow-emerald-500/50" />
-              <LegendItem color="bg-amber-400" label="Fair" shadow="shadow-amber-500/50" />
-              <LegendItem color="bg-slate-800" label="Poor" />
-            </div>
           </>
         )}
       </div>
@@ -361,9 +360,9 @@ const App: React.FC = () => {
 };
 
 const LegendItem = ({ color, label, shadow = "" }: { color: string, label: string, shadow?: string }) => (
-  <div className="flex items-center gap-2.5 flex-shrink-0">
-    <div className={`w-3 h-3 rounded-full ${color} ${shadow} shadow-[0_0_8px]`}></div>
-    <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">{label}</span>
+  <div className="flex items-center gap-1.5 flex-shrink-0">
+    <div className={`w-2 h-2 rounded-full ${color} ${shadow} shadow-[0_0_8px]`}></div>
+    <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest">{label}</span>
   </div>
 );
 

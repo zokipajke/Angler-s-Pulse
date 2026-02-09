@@ -11,12 +11,20 @@ interface DayCellProps {
 
 const DayCell: React.FC<DayCellProps> = ({ day, data, isSelected, onClick }) => {
   const getScoreColor = (score: number) => {
-    if (score >= 90) return 'bg-cyan-400 text-slate-950 shadow-[0_0_20px_rgba(34,211,238,0.6)] ring-2 ring-cyan-200 z-10';
-    if (score >= 80) return 'bg-cyan-500 text-slate-950 shadow-[0_0_15px_rgba(34,211,238,0.3)] ring-1 ring-cyan-300';
+    // EPIC: 90%+ -> Vibrant Violet (Electric Purple)
+    if (score >= 90) return 'bg-violet-500 text-white shadow-[0_0_20px_rgba(139,92,246,0.6)] ring-2 ring-violet-300 z-10';
+    if (score >= 85) return 'bg-violet-600 text-white shadow-[0_0_15px_rgba(139,92,246,0.3)] ring-1 ring-violet-400';
+    
+    // GOOD: 70-84% -> Emerald Green
     if (score >= 70) return 'bg-emerald-400 text-slate-950 shadow-[0_0_10px_rgba(52,211,153,0.2)]';
+    
+    // FAIR: 40-69% -> Amber
     if (score >= 50) return 'bg-amber-400 text-slate-950';
-    if (score >= 30) return 'bg-slate-700 text-slate-300';
-    if (score >= 15) return 'bg-slate-800 text-slate-500';
+    if (score >= 40) return 'bg-amber-500/80 text-slate-900';
+    
+    // POOR: <40% -> Dark Slates
+    if (score >= 25) return 'bg-slate-700 text-slate-300';
+    if (score >= 10) return 'bg-slate-800 text-slate-500';
     return 'bg-slate-900 text-slate-600 opacity-60';
   };
 
