@@ -159,13 +159,15 @@ const App: React.FC = () => {
   return (
     <div className={`
       min-h-screen transition-colors duration-1000 overflow-x-hidden relative pb-12
-      ${scoreIntensity >= 85 ? 'bg-violet-950/20' : scoreIntensity >= 60 ? 'bg-slate-900' : 'bg-black'}
+      ${scoreIntensity === 100 ? 'bg-pink-950/20' : scoreIntensity >= 85 ? 'bg-violet-950/20' : scoreIntensity >= 60 ? 'bg-slate-900' : 'bg-black'}
     `}>
       <div className={`
         fixed inset-0 pointer-events-none transition-opacity duration-1000
-        ${scoreIntensity >= 85 ? 'opacity-30' : scoreIntensity >= 70 ? 'opacity-20' : 'opacity-5'}
+        ${scoreIntensity === 100 ? 'opacity-40' : scoreIntensity >= 85 ? 'opacity-30' : scoreIntensity >= 70 ? 'opacity-20' : 'opacity-5'}
       `} style={{ 
-        background: scoreIntensity >= 70 
+        background: scoreIntensity === 100
+          ? `radial-gradient(circle at 50% 10%, rgba(236, 72, 153, 0.4), transparent 80%)`
+          : scoreIntensity >= 70 
           ? `radial-gradient(circle at 50% 10%, ${scoreIntensity >= 85 ? 'rgba(139, 92, 246, 0.4)' : 'rgba(52, 211, 153, 0.2)'}, transparent 80%)` 
           : '' 
       }} />
@@ -173,7 +175,7 @@ const App: React.FC = () => {
       <div className="max-w-md mx-auto flex flex-col px-4 relative z-10">
         <header className="py-6 flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-violet-400 via-cyan-400 to-emerald-400 tracking-tighter">
+            <h1 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-pink-400 via-violet-400 via-cyan-400 to-emerald-400 tracking-tighter">
               ANGLER'S PULSE
             </h1>
             <p className="text-[10px] text-slate-500 uppercase tracking-[0.2em] font-black flex items-center gap-1.5">
@@ -238,7 +240,8 @@ const App: React.FC = () => {
               {renderCalendar()}
             </div>
 
-            <div className="flex justify-center gap-4 py-4 mb-6">
+            <div className="flex justify-center flex-wrap gap-4 py-4 mb-6 px-2">
+              <LegendItem color="bg-pink-500" label="Perfect" shadow="shadow-pink-500/50" pulse />
               <LegendItem color="bg-violet-500" label="Epic" shadow="shadow-violet-500/50" />
               <LegendItem color="bg-emerald-400" label="Good" shadow="shadow-emerald-400/50" />
               <LegendItem color="bg-amber-400" label="Fair" shadow="shadow-amber-400/50" />
@@ -248,7 +251,9 @@ const App: React.FC = () => {
             {selectedDay && (
               <div className={`
                 rounded-[3.5rem] p-8 transition-all duration-700 border shadow-2xl overflow-hidden relative
-                ${selectedDay.score >= 85 
+                ${selectedDay.score === 100
+                  ? 'bg-pink-900/40 border-pink-400/60 shadow-pink-900/50'
+                  : selectedDay.score >= 85 
                   ? 'bg-violet-900/40 border-violet-400/60 shadow-violet-900/50' 
                   : selectedDay.score >= 70
                   ? 'bg-emerald-900/30 border-emerald-500/40 shadow-emerald-900/30'
@@ -285,7 +290,11 @@ const App: React.FC = () => {
 
                   <div className="w-1/4 flex flex-col items-center relative">
                     <div className="absolute -top-6 flex justify-center w-full">
-                      {selectedDay.score >= 85 && (
+                      {selectedDay.score === 100 ? (
+                        <div className="bg-gradient-to-r from-pink-400 to-rose-500 text-white text-[8px] font-black px-4 py-1.5 rounded-full animate-bounce shadow-lg shadow-pink-500/50 uppercase tracking-widest whitespace-nowrap">
+                          PERFECT CONDITIONS
+                        </div>
+                      ) : selectedDay.score >= 85 && (
                         <div className="bg-gradient-to-r from-violet-400 to-fuchsia-500 text-white text-[8px] font-black px-4 py-1.5 rounded-full animate-bounce shadow-lg shadow-violet-500/50 uppercase tracking-widest whitespace-nowrap">
                           EPIC CONDITIONS
                         </div>
@@ -294,7 +303,9 @@ const App: React.FC = () => {
                     <div className="h-24 flex items-center justify-center">
                       <div className={`
                         w-24 h-24 rounded-[2.5rem] flex items-center justify-center flex-col border-2 transition-all duration-700
-                        ${selectedDay.score >= 85 
+                        ${selectedDay.score === 100
+                          ? 'bg-pink-400/20 border-pink-400 text-pink-400 shadow-[0_0_40px_rgba(236,72,153,0.6)] animate-pulse'
+                          : selectedDay.score >= 85 
                           ? 'bg-violet-400/20 border-violet-400 text-violet-400 shadow-[0_0_40px_rgba(139,92,246,0.6)]' 
                           : selectedDay.score >= 70
                           ? 'bg-emerald-400/20 border-emerald-400 text-emerald-400 shadow-[0_0_30px_rgba(52,211,153,0.3)]'
@@ -363,19 +374,21 @@ const App: React.FC = () => {
                   <div className="grid grid-cols-2 gap-4">
                     <div className={`
                       rounded-[2.5rem] p-6 border text-center transition-all duration-700
-                      ${selectedDay.score >= 85 
+                      ${selectedDay.score === 100
+                        ? 'bg-pink-500/10 border-pink-500/30 shadow-[0_0_20px_rgba(236,72,153,0.15)]'
+                        : selectedDay.score >= 85 
                         ? 'bg-violet-500/10 border-violet-500/30 shadow-[0_0_20px_rgba(139,92,246,0.15)]' 
                         : selectedDay.score >= 70 
                         ? 'bg-emerald-500/10 border-emerald-500/30' 
                         : 'bg-slate-800/60 border-slate-700'}
                     `}>
                       <h4 className="text-[10px] font-black text-slate-500 uppercase mb-4 tracking-widest flex items-center justify-center gap-2">
-                        <div className="w-2 h-2 rounded-full bg-violet-400 shadow-[0_0_8px_rgba(167,139,250,0.8)] animate-pulse"></div>
+                        <div className={`w-2 h-2 rounded-full shadow-[0_0_8px] animate-pulse ${selectedDay.score === 100 ? 'bg-pink-400' : 'bg-violet-400'}`}></div>
                         Major Peaks
                       </h4>
                       <div className="flex flex-col gap-2">
                         {majorPeaks.map((peak, idx) => (
-                          <p key={idx} className={`font-black text-2xl tracking-tight ${selectedDay.score >= 85 ? 'text-violet-400' : selectedDay.score >= 70 ? 'text-emerald-400' : 'text-slate-100'}`}>
+                          <p key={idx} className={`font-black text-2xl tracking-tight ${selectedDay.score === 100 ? 'text-pink-400' : selectedDay.score >= 85 ? 'text-violet-400' : selectedDay.score >= 70 ? 'text-emerald-400' : 'text-slate-100'}`}>
                             {peak.time}
                           </p>
                         ))}
@@ -384,19 +397,21 @@ const App: React.FC = () => {
 
                     <div className={`
                       rounded-[2.5rem] p-6 border text-center transition-all duration-700
-                      ${selectedDay.score >= 85 
+                      ${selectedDay.score === 100
+                        ? 'bg-rose-500/10 border-rose-500/30 shadow-[0_0_20px_rgba(244,63,94,0.1)]'
+                        : selectedDay.score >= 85 
                         ? 'bg-cyan-500/10 border-cyan-500/30 shadow-[0_0_20px_rgba(34,211,238,0.1)]' 
                         : selectedDay.score >= 70 
                         ? 'bg-emerald-500/10 border-emerald-500/30' 
                         : 'bg-slate-800/60 border-slate-700'}
                     `}>
                       <h4 className="text-[10px] font-black text-slate-500 uppercase mb-4 tracking-widest flex items-center justify-center gap-2">
-                        <div className="w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.6)]"></div>
+                        <div className={`w-2 h-2 rounded-full shadow-[0_0_8px] ${selectedDay.score === 100 ? 'bg-rose-400' : 'bg-cyan-400'}`}></div>
                         Minor Peaks
                       </h4>
                       <div className="flex flex-col gap-2">
                         {minorPeaks.map((peak, idx) => (
-                          <p key={idx} className={`font-black text-2xl tracking-tight ${selectedDay.score >= 85 ? 'text-cyan-400' : selectedDay.score >= 70 ? 'text-emerald-400' : 'text-slate-100'}`}>
+                          <p key={idx} className={`font-black text-2xl tracking-tight ${selectedDay.score === 100 ? 'text-rose-400' : selectedDay.score >= 85 ? 'text-cyan-400' : selectedDay.score >= 70 ? 'text-emerald-400' : 'text-slate-100'}`}>
                             {peak.time}
                           </p>
                         ))}
@@ -413,9 +428,9 @@ const App: React.FC = () => {
   );
 };
 
-const LegendItem = ({ color, label, shadow = "" }: { color: string, label: string, shadow?: string }) => (
+const LegendItem = ({ color, label, shadow = "", pulse = false }: { color: string, label: string, shadow?: string, pulse?: boolean }) => (
   <div className="flex items-center gap-1.5 flex-shrink-0">
-    <div className={`w-2 h-2 rounded-full ${color} ${shadow} shadow-[0_0_8px]`}></div>
+    <div className={`w-2 h-2 rounded-full ${color} ${shadow} shadow-[0_0_8px] ${pulse ? 'animate-pulse' : ''}`}></div>
     <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest">{label}</span>
   </div>
 );

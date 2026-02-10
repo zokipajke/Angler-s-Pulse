@@ -11,7 +11,12 @@ interface DayCellProps {
 
 const DayCell: React.FC<DayCellProps> = ({ day, data, isSelected, onClick }) => {
   const getScoreColor = (score: number) => {
-    // EPIC: 90%+ -> Vibrant Violet (Electric Purple)
+    // PERFECT: 100% -> Vibrant Pink / Fuchsia with Pulse
+    if (score === 100) {
+      return 'bg-pink-500 text-white shadow-[0_0_25px_rgba(236,72,153,0.8)] ring-2 ring-pink-300 z-20 animate-pulse';
+    }
+    
+    // EPIC: 90-99% -> Vibrant Violet (Electric Purple)
     if (score >= 90) return 'bg-violet-500 text-white shadow-[0_0_20px_rgba(139,92,246,0.6)] ring-2 ring-violet-300 z-10';
     if (score >= 85) return 'bg-violet-600 text-white shadow-[0_0_15px_rgba(139,92,246,0.3)] ring-1 ring-violet-400';
     
